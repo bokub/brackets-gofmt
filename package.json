@@ -1,0 +1,12 @@
+{
+    "name": "brackets-gofmt",
+    "title": "Go Formatter (gofmt) for Brackets",
+    "homepage": "https://github.com/earthspace/brackets-gofmt",
+    "description": "One-Touch Go language file formatter. Reformats the contents of an open Go file using gofmt.",
+    "version": "1.0",
+    "author": "Jonathan Blake",
+    "license": "MIT",
+    "engines": {
+        "brackets": ">=0.31.0"
+    }
+}
