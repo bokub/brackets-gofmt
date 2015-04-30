@@ -1,0 +1,19 @@
+.easeOut {
+       -webkit-transition: background 500ms ease-out;
+    -moz-transition: background 500ms ease-out;
+    -ms-transition: background 500ms ease-out;
+    -o-transition: background 500ms ease-out;
+    transition: background 500ms ease-out;
+}
+#gofmt-icon {
+    background-image: url(images/gofmt-icon.png);
+    height: 24px;
+    width: 24px;
+}
+
+#gofmt-icon.on {
+    background-image: url(images/gofmt-icon-on.png);
+    height: 24px;
+    width: 24px;
+ 
+}
