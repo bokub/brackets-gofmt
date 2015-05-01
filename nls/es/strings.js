@@ -27,5 +27,10 @@
 /*global define */
 
 define({
-    "FORMAT_THIS_FILE"      : "Formato con gofmt"
+	"FORMAT_THIS_FILE": "Formato con gofmt",
+	"MISSING_GOFMT_TITLE": "No se pudo encontrar gofmt ejecutable",
+	"MISSING_GOFMT_BODY_1": "El ejecutable para gofmt no se encontr— en el camino.",
+	"MISSING_GOFMT_BODY_2": "La forma m‡s f‡cil de solucionar este problema es crear un enlace simb—lico al ejecutable gofmt, por ejemplo:",
+	"MISSING_GOFMT_BODY_3": "donde el primer par‡metro es el resultado de 'que gofmt'.",
+    "MISSING_GOFMT_ERROR": "C—digo de error de formato"
 });

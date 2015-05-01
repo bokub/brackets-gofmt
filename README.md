@@ -13,7 +13,7 @@ path for gofmt. The easiest way to solve this is to create a symlink to wherever
 
 * sudo ln -s /usr/local/go/bin/gofmt /usr/bin/gofmt
 
-
+If anyone has a better solution to this issue, please let me know!
 
 ### Why?
 Sometimes it's nice to be able to reformat your go files without having to save them first, drop to console, or 
