@@ -15,15 +15,16 @@ define(function (require, exports, module) {
 		GFT_CMD_ID          = "gofmt.runfmt";
 
 	function endGoFmt() {
-		$('#gofmt-icon').addClass('easeOut');
-		$('#gofmt-icon').removeClass('on');
+        var icon = $('#gofmt-icon');
+		icon.addClass('easeOut');
+		icon.removeClass('on');
 	}
 
 	function initGoFmt() {
 		var icon = $("<a  href='#' id='gofmt-icon'> </a>");
 		icon.attr("title", Strings.FORMAT_THIS_FILE);
 		icon.on("click", handleIconClick);
-		icon.appendTo($("#main-toolbar .buttons"));
+		icon.appendTo($("#main-toolbar").find(".buttons"));
 		ExtensionUtils.loadStyleSheet(module, "styles/gofmt.css");
 	}
 
@@ -75,9 +76,10 @@ define(function (require, exports, module) {
 	}
 
 	function handleIconClick() {
-		$('#gofmt-icon').removeClass('easeOut');
-		if (!$('#gofmt-icon').hasClass('on')) {
-			$('#gofmt-icon').addClass('on');
+        var icon = $('#gofmt-icon');
+        icon.removeClass('easeOut');
+		if (!icon.hasClass('on')) {
+            icon.addClass('on');
 		}
 		startGoFmt();
 	}
