@@ -35,10 +35,10 @@ define(function (require, exports, module) {
 			if (editor && editor.document) {
 				var cursorPos = editor.getCursorPos(),
 					fileBody = editor.document.getText();
-					
+
 				var tmpFilePath = currentDocument.file._path + '.tmp';
 				var tmpFile = FileSystem.getFileForPath(tmpFilePath);
-				
+
 				tmpFile.exists(function (err, exists) {
 					if (!exists) {
 						tmpFile.write(fileBody);
@@ -57,7 +57,7 @@ define(function (require, exports, module) {
 									brackets.DIALOG_ID_SAVE_CLOSE,
                                     Strings.MISSING_GOFMT_ERROR,
                                     data
-                                    );
+                                );
 							} else {
                                 editor.selectAllNoScroll();
 								editor.document.setText(data);
@@ -95,7 +95,10 @@ define(function (require, exports, module) {
 
 	CommandManager.register(Strings.FORMAT_THIS_FILE, GFT_CMD_ID, handleIconClick);
 
-	var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
-	menu.addMenuItem(GFT_CMD_ID);
+    var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
+    menu.addMenuItem(GFT_CMD_ID, [
+        {key: "Ctrl-Alt-F", platform: "win"},
+        {key: "Cmd-Alt-F", platform: "mac"}
+    ]);
 
 });
