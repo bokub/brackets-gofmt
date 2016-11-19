@@ -28,9 +28,9 @@
 
 define({
 	"FORMAT_THIS_FILE": "Format mit gofmt",
-	"MISSING_GOFMT_TITLE": "Konnte nicht gofmt ausf웘rbare finden",
-	"MISSING_GOFMT_BODY_1": "Die ausf웘rbare Datei f웦 gofmt nicht auf dem Weg zu finden.",
-	"MISSING_GOFMT_BODY_2": "Der einfachste Weg, dies zu beheben, ist ein symbolischer Link auf das ausf웘rbare gofmt, zB zu erstellen:",
+	"MISSING_GOFMT_TITLE": "Konnte nicht gofmt ausf체hrbare finden",
+	"MISSING_GOFMT_BODY_1": "Die ausf체hrbare Datei f체r gofmt nicht auf dem Weg zu finden.",
+	"MISSING_GOFMT_BODY_2": "Der einfachste Weg, dies zu beheben, ist ein symbolischer Link auf das ausf체hrbare gofmt, zB zu erstellen:",
 	"MISSING_GOFMT_BODY_3": ", wo der erste Parameter ist das Ergebnis 'die gofmt'.",
     "MISSING_GOFMT_ERROR": "Code Formatierungsfehler"
 });
