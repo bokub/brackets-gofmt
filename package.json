@@ -1,12 +1,16 @@
 {
     "name": "brackets-gofmt",
     "title": "Go Formatter (gofmt) for Brackets",
-    "homepage": "https://github.com/earthspace/brackets-gofmt",
+    "homepage": "https://github.com/bokub/brackets-gofmt",
     "description": "One-Touch Go language file formatter. Reformats the contents of an open Go (golang) file using gofmt.",
-    "version": "1.0.9",
-    "author": "earthspace",
+    "version": "1.1.0",
+    "author": "Boris K (https://github.com/bokub)",
+    "contributors": "Jonathan Blake AKA earthspace",
     "license": "MIT",
+    "i18n": ["en", "fr"],
     "engines": {
         "brackets": ">=0.31.0"
-    }
+    },
+    "categories": "formatting",
+    "keywords":["go", "golang", "gofmt", "format"]
 }
