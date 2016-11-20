@@ -7,10 +7,10 @@
     "author": "Boris K (https://github.com/bokub)",
     "contributors": "Jonathan Blake AKA earthspace",
     "license": "MIT",
-    "i18n": [ "en", "fr", "de", "it", "es", "nl"],
+    "i18n": ["en", "fr"],
     "engines": {
         "brackets": ">=0.31.0"
     },
     "categories": "formatting",
-    "keywords":["go","golang","gofmt","format"]
+    "keywords":["go", "golang", "gofmt", "format"]
 }

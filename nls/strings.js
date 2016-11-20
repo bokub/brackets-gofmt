@@ -7,10 +7,6 @@ define(function (require, exports, module) {
 
     module.exports = {
         root: true,
-        "de": true,
-        "it": true,
-        "nl": true,
-        "fr": true,
-        "es": true
+        "fr": true
     };
 });
