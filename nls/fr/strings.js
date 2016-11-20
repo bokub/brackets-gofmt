@@ -5,9 +5,7 @@
 
 define({
     "FORMAT_THIS_FILE": "Formater avec gofmt",
-    "MISSING_GOFMT_TITLE": "Impossible de trouver l'exécutable gofmt ",
-    "MISSING_GOFMT_BODY_1": "L'exécutable pour gofmt n'a pas été trouvé.",
-    "MISSING_GOFMT_BODY_2": "La meilleure façon de résoudre ce problème est de créer un lien symbolique vers l'exécutable de gofmt, par exemple :",
-    "MISSING_GOFMT_BODY_3": "donde el primer parámetro es el resultado de 'which gofmt'.",
-    "MISSING_GOFMT_ERROR": "Erreur de formatage du code"
+    "ERROR_TITLE": "Erreur gofmt",
+    "ERROR_NO_CURRENT_FILE": "Aucun fichier n'est actuellement ouvert.<br>Ouvrez un fichier go et essayez à nouveau.",
+    "ERROR_NOT_GO_FILE": "Le fichier actuel est un fichier _language_.<br>Gofmt peut formater uniquement les fichiers Go."
 });
