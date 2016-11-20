@@ -16,13 +16,15 @@ define(function (require, exports, module) {
         ThemeManager = brackets.getModule('view/ThemeManager'),
         node = new NodeConnection(),
         Strings = require("strings"),
-        GFT_CMD_ID = "gofmt.runfmt";
+        GFT_CMD_ID = "gofmt.runfmt",
+        running = false;
 
     /** Sets the icon to its original state */
     function endGoFmt() {
         var icon = $('#gofmt-icon');
         icon.addClass('easeOut');
         icon.removeClass('on');
+        running = false;
     }
 
     /** Shows dialg with an error message */
@@ -49,6 +51,11 @@ define(function (require, exports, module) {
 
     /** The main function, called when clicking the button or pressing the shortcut */
     function startGoFmt() {
+        if (running) {
+            return;
+        }
+        running = true;
+
         var editor = EditorManager.getFocusedEditor() || EditorManager.getActiveEditor(),
             currentDocument = DocumentManager.getCurrentDocument();
         if (currentDocument === null) {
@@ -86,10 +93,12 @@ define(function (require, exports, module) {
                         editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
                         endGoFmt();
                     }
+                    tmpFile.unlink();
                 });
+            } else {
+                tmpFile.unlink();
+                endGoFmt();
             }
-
-            tmpFile.unlink();
         });
     }
 
