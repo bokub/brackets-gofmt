@@ -67,7 +67,8 @@ define(function (require, exports, module) {
             return;
         }
 
-        if (!editor.document) {
+        if (!editor.document || typeof node.domains.gofmt === "undefined") {
+            // Happens sometimes (when brackets has a critical problem)
             endGoFmt();
             return;
         }
