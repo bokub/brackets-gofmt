@@ -49,6 +49,53 @@ define(function (require, exports, module) {
             .replace(/\n/g, '<br>') + '</span>';
     }
 
+    /** Calls gofmt to format file */
+    function formatFile(tmpFile, tmpFilePath, fileBody, callback) {
+        tmpFile.exists(function (err, exists) {
+            if (!exists) {
+                tmpFile.write(fileBody);
+                node.domains.gofmt.formatFile(tmpFilePath).done(function (data) {
+                    var index = data.indexOf('gofmt');
+                    if (index !== -1 && index < 15) {
+                        tmpFile.unlink();
+                        showErrorDialog(data);
+                    } else if (data.match(/\.tmp\:\d*?\:\d*?\:/)) {
+                        showErrorDialog(formatGoErrors(data));
+                    } else {
+                        callback(data);
+                    }
+                    tmpFile.unlink();
+                });
+            } else {
+                tmpFile.unlink();
+                endGoFmt();
+            }
+        });
+    }
+
+    /** Calls goimports to automatically add/remove imports */
+    function autoImport(tmpFile, tmpFilePath, fileBody, callback) {
+        tmpFile.exists(function (err, exists) {
+            if (!exists) {
+                tmpFile.write(fileBody);
+                node.domains.goimports.autoImports(tmpFilePath).done(function (data) {
+                    var index = data.indexOf('goimports');
+                    if (index !== -1 && index < 15) {
+                        showErrorDialog(data);
+                    } else if (data.match(/\.tmp\:\d*?\:\d*?\:/)) {
+                        showErrorDialog(formatGoErrors(data));
+                    } else {
+                        callback(data);
+                    }
+                    tmpFile.unlink();
+                });
+            } else {
+                tmpFile.unlink();
+                endGoFmt();
+            }
+        });
+    }
+
     /** The main function, called when clicking the button or pressing the shortcut */
     function startGoFmt() {
         if (running) {
@@ -76,50 +123,18 @@ define(function (require, exports, module) {
         var cursorPos = editor.getCursorPos(),
             fileBody = editor.document.getText();
 
-        var tmpFilePath = currentDocument.file._path + '.tmp';
-        var tmpFile = FileSystem.getFileForPath(tmpFilePath);
+        var tmpFilePathFormat = currentDocument.file._path + '.f.tmp';
+        var tmpFilePathImport = currentDocument.file._path + '.i.tmp';
+        var tmpFileFormat = FileSystem.getFileForPath(tmpFilePathFormat);
+        var tmpFileImport = FileSystem.getFileForPath(tmpFilePathImport);
 
-        tmpFile.exists(function (err, exists) {
-            if (!exists) {
-                tmpFile.write(fileBody);
-                node.domains.gofmt.formatFile(tmpFilePath).done(function (data) {
-                    var index = data.indexOf('gofmt');
-                    if (index != -1 && index < 15) {
-                        tmpFile.unlink();
-                        showErrorDialog(data);
-                    } else if (data.match(/\.tmp\:\d*?\:\d*?\:/)) {
-                        tmpFile.unlink();
-                        showErrorDialog(formatGoErrors(data));
-                    } else {
-                        tmpFile.write(data);
-                        //
-                        node.domains.goimports.autoImports(tmpFilePath).done(function (data) {
-                            var index = data.indexOf('goimports');
-                            if (index != -1 && index < 15) {
-                                tmpFile.unlink();
-                                showErrorDialog(data);
-                            } else if (data.match(/\.tmp\:\d*?\:\d*?\:/)) {
-                                tmpFile.unlink();
-                                showErrorDialog(formatGoErrors(data));
-                            } else {
-                                editor.selectAllNoScroll();
-                                editor.document.setText(data);
-                                editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
-                                tmpFile.unlink();
-                                endGoFmt();
-                            }
-                        });
-                        //
-                        editor.selectAllNoScroll();
-                        editor.document.setText(data);
-                        editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
-                        endGoFmt();
-                    }
-                });
-            } else {
-                tmpFile.unlink();
+        formatFile(tmpFileFormat, tmpFilePathFormat, fileBody, function (formatted) {
+            autoImport(tmpFileImport, tmpFilePathImport, formatted, function (imported) {
+                editor.selectAllNoScroll();
+                editor.document.setText(imported);
+                editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
                 endGoFmt();
-            }
+            });
         });
     }
 
