@@ -67,7 +67,7 @@ define(function (require, exports, module) {
             return;
         }
 
-        if (!editor.document || typeof node.domains.gofmt === "undefined") {
+        if (!editor.document || typeof node.domains.gofmt === "undefined" || typeof node.domains.goimports === "undefined") {
             // Happens sometimes (when brackets has a critical problem)
             endGoFmt();
             return;
@@ -84,17 +84,37 @@ define(function (require, exports, module) {
                 tmpFile.write(fileBody);
                 node.domains.gofmt.formatFile(tmpFilePath).done(function (data) {
                     var index = data.indexOf('gofmt');
-                    if (index === 0 || index === 1) {
+                    if (index != -1 && index < 15) {
+                        tmpFile.unlink();
                         showErrorDialog(data);
                     } else if (data.match(/\.tmp\:\d*?\:\d*?\:/)) {
+                        tmpFile.unlink();
                         showErrorDialog(formatGoErrors(data));
                     } else {
+                        tmpFile.write(data);
+                        //
+                        node.domains.goimports.autoImports(tmpFilePath).done(function (data) {
+                            var index = data.indexOf('goimports');
+                            if (index != -1 && index < 15) {
+                                tmpFile.unlink();
+                                showErrorDialog(data);
+                            } else if (data.match(/\.tmp\:\d*?\:\d*?\:/)) {
+                                tmpFile.unlink();
+                                showErrorDialog(formatGoErrors(data));
+                            } else {
+                                editor.selectAllNoScroll();
+                                editor.document.setText(data);
+                                editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
+                                tmpFile.unlink();
+                                endGoFmt();
+                            }
+                        });
+                        //
                         editor.selectAllNoScroll();
                         editor.document.setText(data);
                         editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
                         endGoFmt();
                     }
-                    tmpFile.unlink();
                 });
             } else {
                 tmpFile.unlink();
@@ -121,11 +141,12 @@ define(function (require, exports, module) {
         icon.appendTo($("#main-toolbar").find(".buttons"));
         ExtensionUtils.loadStyleSheet(module, "styles/gofmt.css");
     }
-
-    if (!node.domains.gofmt) {
+    if (!node.domains.gofmt || !node.domains.goimports) {
         node.connect(true).done(function () {
-            var path = ExtensionUtils.getModulePath(module, 'node/gofmt.js');
-            node.loadDomains([path], true).done(function () {
+            var gofmtPath = ExtensionUtils.getModulePath(module, 'node/gofmt.js');
+            var goimportsPath = ExtensionUtils.getModulePath(module, 'node/goimports.js');
+
+            node.loadDomains([gofmtPath, goimportsPath], true).done(function () {
                 AppInit.appReady(initGoFmt);
             });
         });
