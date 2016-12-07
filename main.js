@@ -4,6 +4,7 @@
 define(function (require, exports, module) {
     "use strict";
 
+    // Brackets modules
     var CommandManager = brackets.getModule("command/CommandManager"),
         FileSystem = brackets.getModule('filesystem/FileSystem'),
         DocumentManager = brackets.getModule('document/DocumentManager'),
@@ -14,9 +15,21 @@ define(function (require, exports, module) {
         ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
         NodeConnection = brackets.getModule('utils/NodeConnection'),
         ThemeManager = brackets.getModule('view/ThemeManager'),
-        node = new NodeConnection(),
-        Strings = require("strings"),
-        GFT_CMD_ID = "gofmt.runfmt",
+        Commands = brackets.getModule("command/Commands");
+
+    // Local modules
+    var SettingsDialog  = require("src/SettingsDialog"),
+        Preferences     = require("src/Preferences"),
+        Strings         = require("strings");
+
+    // Start node
+    var node = new NodeConnection();
+
+    // Load CSS
+    ExtensionUtils.loadStyleSheet(module, "styles/gofmt.less");
+
+    var GFT_CMD_ID = "gofmt.runfmt",
+        GFT_SETTINGS_CMD_ID = "gofmt.settings",
         running = false;
 
     /** Sets the icon to its original state */
@@ -45,7 +58,7 @@ define(function (require, exports, module) {
     function formatGoErrors(message) {
         var colors = ThemeManager.getCurrentTheme().dark ? ['#c8c8c8', '#6bbeff', '#ff9d2a'] : ['#333333', '#0083e8', '#e27100'];
         return ('<span style="color:' + colors[0] + '">') +
-            message.replace(/(\S+)\.tmp\:(\d*?\:\d*?)\:/g, '<span style="color:' + colors[1] + '">$1</span><span style="color:' + colors[2] + ';font-weight:bold">&nbsp;$2&nbsp; </span>')
+            message.replace(/(\S+)\.f\.tmp\:(\d*?\:\d*?)\:/g, '<span style="color:' + colors[1] + '">$1</span><span style="color:' + colors[2] + ';font-weight:bold">&nbsp;$2&nbsp; </span>')
             .replace(/\n/g, '<br>') + '</span>';
     }
 
@@ -54,12 +67,11 @@ define(function (require, exports, module) {
         tmpFile.exists(function (err, exists) {
             if (!exists) {
                 tmpFile.write(fileBody);
-                node.domains.gofmt.formatFile(tmpFilePath).done(function (data) {
+                node.domains.gofmt.formatFile(tmpFilePath, Preferences.get('gofmtPath')).done(function (data) {
                     var index = data.indexOf('gofmt');
                     if (index !== -1 && index < 15) {
                         tmpFile.unlink();
-                        showErrorDialog(data);
-                    } else if (data.match(/\.tmp\:\d*?\:\d*?\:/)) {
+                    } else if (data.match(/\.f\.tmp\:\d*?\:\d*?\:/)) {
                         showErrorDialog(formatGoErrors(data));
                     } else {
                         callback(data);
@@ -78,12 +90,12 @@ define(function (require, exports, module) {
         tmpFile.exists(function (err, exists) {
             if (!exists) {
                 tmpFile.write(fileBody);
-                node.domains.goimports.autoImports(tmpFilePath).done(function (data) {
+                node.domains.goimports.autoImports(tmpFilePath, Preferences.get('goimportsPath'), Preferences.get('goPath')).done(function (data) {
                     var index = data.indexOf('goimports');
-                    if (index !== -1 && index < 15) {
+                    if (index !== -1 && index < 30) {
                         showErrorDialog(data);
-                    } else if (data.match(/\.tmp\:\d*?\:\d*?\:/)) {
-                        showErrorDialog(formatGoErrors(data));
+                    } else if (data.match(/\.i\.tmp\:\d*?\:\d*?\:/)) {
+                        showErrorDialog(data);
                     } else {
                         callback(data);
                     }
@@ -121,20 +133,32 @@ define(function (require, exports, module) {
         }
 
         var cursorPos = editor.getCursorPos(),
-            fileBody = editor.document.getText();
+            fileBody = editor.document.getText(),
+            useAutoImport = Preferences.get('useGoImports');
 
         var tmpFilePathFormat = currentDocument.file._path + '.f.tmp';
-        var tmpFilePathImport = currentDocument.file._path + '.i.tmp';
         var tmpFileFormat = FileSystem.getFileForPath(tmpFilePathFormat);
-        var tmpFileImport = FileSystem.getFileForPath(tmpFilePathImport);
+        var tmpFilePathImport = currentDocument.file._path + '.i.tmp';
+        var tmpFileImport;
+
+        if (useAutoImport) {
+            tmpFileImport = FileSystem.getFileForPath(tmpFilePathImport);
+        }
 
         formatFile(tmpFileFormat, tmpFilePathFormat, fileBody, function (formatted) {
-            autoImport(tmpFileImport, tmpFilePathImport, formatted, function (imported) {
+            if (useAutoImport) {
+                autoImport(tmpFileImport, tmpFilePathImport, formatted, function (imported) {
+                    editor.selectAllNoScroll();
+                    editor.document.setText(imported);
+                    editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
+                    endGoFmt();
+                });
+            } else {
                 editor.selectAllNoScroll();
-                editor.document.setText(imported);
+                editor.document.setText(formatted);
                 editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
                 endGoFmt();
-            });
+            }
         });
     }
 
@@ -154,8 +178,8 @@ define(function (require, exports, module) {
         icon.attr("title", Strings.FORMAT_THIS_FILE);
         icon.on("click", handleIconClick);
         icon.appendTo($("#main-toolbar").find(".buttons"));
-        ExtensionUtils.loadStyleSheet(module, "styles/gofmt.css");
     }
+
     if (!node.domains.gofmt || !node.domains.goimports) {
         node.connect(true).done(function () {
             var gofmtPath = ExtensionUtils.getModulePath(module, 'node/gofmt.js');
@@ -169,12 +193,15 @@ define(function (require, exports, module) {
         AppInit.appReady(initGoFmt);
     }
 
-    CommandManager.register(Strings.FORMAT_THIS_FILE, GFT_CMD_ID, handleIconClick);
+    // Register commands and add them to the menu.
 
-    var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
-    menu.addMenuItem(GFT_CMD_ID, [
-        {key: "Ctrl-Alt-F", platform: "win"},
-        {key: "Cmd-Alt-F", platform: "mac"}
+    var editMenu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
+    CommandManager.register(Strings.FORMAT_THIS_FILE, GFT_CMD_ID, handleIconClick);
+    editMenu.addMenuItem(GFT_CMD_ID, [
+        {key: Preferences.get('gofmtShortcut')}
     ]);
 
+    var fileMenu = Menus.getMenu(Menus.AppMenuBar.FILE_MENU);
+    CommandManager.register(Strings.SETTINGS_CMD, GFT_SETTINGS_CMD_ID, SettingsDialog.show);
+    fileMenu.addMenuItem(GFT_SETTINGS_CMD_ID, [], Menus.AFTER, Commands.FILE_PROJECT_SETTINGS);
 });

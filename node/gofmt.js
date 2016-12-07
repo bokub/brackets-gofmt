@@ -5,8 +5,8 @@
 
     var child_process = require('child_process');
     
-    function formatFile(filePath, callback) {
-        var command = 'gofmt "' + filePath + '"';
+    function formatFile(filePath, gofmtPath, callback) {
+        var command = gofmtPath + ' "' + filePath + '"';
         child_process.exec(command, function (err, stdout, stderr) {
             callback(null, stderr + stdout);
         });

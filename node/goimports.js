@@ -5,10 +5,9 @@
 
     var child_process = require('child_process');
 
-    function autoImports(filePath, callback) {
+    function autoImports(filePath, goImportsPath, goPath, callback) {
 
-        var command = 'goimports "' + filePath + '"',
-            goPath = '*****';
+        var command = goImportsPath + ' "' + filePath + '"';
 
         child_process.exec(command, {
             env: {
