@@ -56,9 +56,9 @@ define(function (require, exports, module) {
 
     /** Adds colors and <br> tags to a gofmt error message */
     function formatGoErrors(message) {
-        var colors = ThemeManager.getCurrentTheme().dark ? ['#c8c8c8', '#6bbeff', '#ff9d2a'] : ['#333333', '#0083e8', '#e27100'];
-        return ('<span style="color:' + colors[0] + '">') +
-            message.replace(/(\S+)\.f\.tmp\:(\d*?\:\d*?)\:/g, '<span style="color:' + colors[1] + '">$1</span><span style="color:' + colors[2] + ';font-weight:bold">&nbsp;$2&nbsp; </span>')
+        var colorTheme = ThemeManager.getCurrentTheme().dark ? "dark" : "light";
+        return ('<span class="go-errors ' + colorTheme + '">') +
+            message.replace(/(\S+)\.f\.tmp\:(\d*?\:\d*?)\:/g, '<span class="file-name">$1</span><span class="line-number">&nbsp;$2&nbsp; </span>')
             .replace(/\n/g, '<br>') + '</span>';
     }
 
