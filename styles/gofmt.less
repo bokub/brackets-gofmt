@@ -21,29 +21,33 @@
     width: 24px;
 
 }
-.dialog-message .go-errors.dark {
-    color: @dark-grey-text;
-    .line-number {
-        color: @dark-orange-text;
-    }
-    .file-name {
-        color: @dark-blue-text;
-    }
-}
 
-.dialog-message .go-errors.light {
-    color: @grey-text;
-    .line-number {
-        color: @orange-text;
+#gofmt-error-dialog {
+    font-size: 1.15em;
+    .go-errors.dark {
+        color: @dark-grey-text;
+        .line-number {
+            color: @dark-orange-text;
+        }
+        .file-name {
+            color: @dark-blue-text;
+        }
     }
-    .file-name {
-        color: @blue-text;
+
+    .go-errors.light {
+        color: @grey-text;
+        .line-number {
+            color: @orange-text;
+        }
+        .file-name {
+            color: @blue-text;
+        }
     }
-}
+} 
 
 #gofmt-question-dialog {
     .modal-body {
-        font-size: 1.1em;
+        font-size: 1.15em;
     }
 }
 
@@ -60,8 +64,9 @@
             vertical-align:middle;
             display:inline-block;
             .code {
+                margin: 0 4px;
                 font-family: monospace;
-                font-size: 0.9em;
+                font-size: 0.95em;
                 color: @moreDarkGrey;
             }
         }

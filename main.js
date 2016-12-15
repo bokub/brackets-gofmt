@@ -15,6 +15,8 @@ define(function (require, exports, module) {
         ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
         NodeConnection = brackets.getModule('utils/NodeConnection'),
         ThemeManager = brackets.getModule('view/ThemeManager'),
+        Mustache = brackets.getModule("thirdparty/mustache/mustache"),
+        Dialogs = brackets.getModule("widgets/Dialogs"),
         Commands = brackets.getModule("command/Commands");
 
     // Local modules
@@ -50,7 +52,20 @@ define(function (require, exports, module) {
                 }
             }
         }
-        Widgets.showModalDialog(brackets.DIALOG_ID_SAVE_CLOSE, Strings.ERROR_TITLE, errorMessage);
+
+        var errorDialogTemplate = require("text!templates/error-dialog.html");
+        var compiledTemplate = Mustache.render(errorDialogTemplate, {
+            title: Strings.ERROR_TITLE,
+            error: errorMessage,
+            Strings: Strings
+        });
+
+        Dialogs.showModalDialogUsingTemplate(compiledTemplate).done(function (buttonId) {
+            if (buttonId === "settings") {
+                CommandManager.execute(GFT_SETTINGS_CMD_ID);
+            }
+        });
+
         endGoFmt();
     }
 

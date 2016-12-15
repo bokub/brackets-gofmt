@@ -26,5 +26,6 @@ define({
     BTN_OK: "OK",
     BTN_SAVE: "Save",
     BTN_CANCEL: "Cancel",
-    BTN_DEFAULT: "Default settings"
+    BTN_DEFAULT: "Default settings",
+    BTN_SETTINGS: "Settings"
 });
