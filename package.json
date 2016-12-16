@@ -1,16 +1,21 @@
 {
-    "name": "brackets-gofmt",
-    "title": "Go Formatter (gofmt) for Brackets",
-    "homepage": "https://github.com/bokub/brackets-gofmt",
-    "description": "One-Touch Go language file formatter. Reformats the contents of an open Go (golang) file using gofmt.",
-    "version": "1.1.0",
-    "author": "Boris K (https://github.com/bokub)",
-    "contributors": "Jonathan Blake AKA earthspace",
-    "license": "MIT",
-    "i18n": ["en", "fr"],
+    "name": "bokub.go-formatter",
+    "version": "1.2.0",
+    "title": "Improved Go Formatter",
+    "description": "Format your Go files easily with a custom shortcut. This extension uses gofmt to format your code and goimports to manage your imports.",
     "engines": {
         "brackets": ">=0.31.0"
     },
+    "homepage": "https://github.com/bokub/brackets-gofmt",
+    "author": "Boris K (https://github.com/bokub)",
+    "contributors": "Jonathan Blake AKA earthspace",
+    "license": "MIT",
     "categories": "formatting",
-    "keywords":["go", "golang", "gofmt", "format"]
+    "keywords":["go", "golang", "gofmt", "goimports", "format", "formatter", "formatting"],
+    "i18n": ["en", "fr"],
+    "package-i18n": {
+        "fr": {
+            "description": "Formattez facilement vos fichiers Go avec un raccourci personnalisé. Cette extension utilise gofmt pour formater vos fichiers et goimports pour gérer vos imports."
+        }
+    }
 }
