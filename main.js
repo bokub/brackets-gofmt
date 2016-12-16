@@ -4,6 +4,7 @@
 define(function (require, exports, module) {
     "use strict";
 
+    // Brackets modules
     var CommandManager = brackets.getModule("command/CommandManager"),
         FileSystem = brackets.getModule('filesystem/FileSystem'),
         DocumentManager = brackets.getModule('document/DocumentManager'),
@@ -14,9 +15,23 @@ define(function (require, exports, module) {
         ExtensionUtils = brackets.getModule('utils/ExtensionUtils'),
         NodeConnection = brackets.getModule('utils/NodeConnection'),
         ThemeManager = brackets.getModule('view/ThemeManager'),
-        node = new NodeConnection(),
-        Strings = require("strings"),
-        GFT_CMD_ID = "gofmt.runfmt",
+        Mustache = brackets.getModule("thirdparty/mustache/mustache"),
+        Dialogs = brackets.getModule("widgets/Dialogs"),
+        Commands = brackets.getModule("command/Commands");
+
+    // Local modules
+    var SettingsDialog  = require("src/SettingsDialog"),
+        Preferences     = require("src/Preferences"),
+        Strings         = require("strings");
+
+    // Start node
+    var node = new NodeConnection();
+
+    // Load CSS
+    ExtensionUtils.loadStyleSheet(module, "styles/gofmt.less");
+
+    var GFT_CMD_ID = "gofmt.runfmt",
+        GFT_SETTINGS_CMD_ID = "gofmt.settings",
         running = false;
 
     /** Sets the icon to its original state */
@@ -37,16 +52,75 @@ define(function (require, exports, module) {
                 }
             }
         }
-        Widgets.showModalDialog(brackets.DIALOG_ID_SAVE_CLOSE, Strings.ERROR_TITLE, errorMessage);
+
+        var errorDialogTemplate = require("text!templates/error-dialog.html");
+        var compiledTemplate = Mustache.render(errorDialogTemplate, {
+            title: Strings.ERROR_TITLE,
+            error: errorMessage,
+            Strings: Strings
+        });
+
+        Dialogs.showModalDialogUsingTemplate(compiledTemplate).done(function (buttonId) {
+            if (buttonId === "settings") {
+                CommandManager.execute(GFT_SETTINGS_CMD_ID);
+            }
+        });
+
         endGoFmt();
     }
 
     /** Adds colors and <br> tags to a gofmt error message */
     function formatGoErrors(message) {
-        var colors = ThemeManager.getCurrentTheme().dark ? ['#c8c8c8', '#6bbeff', '#ff9d2a'] : ['#333333', '#0083e8', '#e27100'];
-        return ('<span style="color:' + colors[0] + '">') +
-            message.replace(/(\S+)\.tmp\:(\d*?\:\d*?)\:/g, '<span style="color:' + colors[1] + '">$1</span><span style="color:' + colors[2] + ';font-weight:bold">&nbsp;$2&nbsp; </span>')
+        var colorTheme = ThemeManager.getCurrentTheme().dark ? "dark" : "light";
+        return ('<span class="go-errors ' + colorTheme + '">') +
+            message.replace(/(\S+)\.f\.tmp\:(\d*?\:\d*?)\:/g, '<span class="file-name">$1</span><span class="line-number">&nbsp;$2&nbsp; </span>')
             .replace(/\n/g, '<br>') + '</span>';
+    }
+
+    /** Calls gofmt to format file */
+    function formatFile(tmpFile, tmpFilePath, fileBody, callback) {
+        tmpFile.exists(function (err, exists) {
+            if (!exists) {
+                tmpFile.write(fileBody);
+                node.domains.gofmt.formatFile(tmpFilePath, Preferences.get('gofmtPath')).done(function (data) {
+                    var index = data.indexOf('gofmt');
+                    if (index !== -1 && index < 15) {
+                        tmpFile.unlink();
+                    } else if (data.match(/\.f\.tmp\:\d*?\:\d*?\:/)) {
+                        showErrorDialog(formatGoErrors(data));
+                    } else {
+                        callback(data);
+                    }
+                    tmpFile.unlink();
+                });
+            } else {
+                tmpFile.unlink();
+                endGoFmt();
+            }
+        });
+    }
+
+    /** Calls goimports to automatically add/remove imports */
+    function autoImport(tmpFile, tmpFilePath, fileBody, callback) {
+        tmpFile.exists(function (err, exists) {
+            if (!exists) {
+                tmpFile.write(fileBody);
+                node.domains.goimports.autoImports(tmpFilePath, Preferences.get('goimportsPath'), Preferences.get('goPath')).done(function (data) {
+                    var index = data.indexOf('goimports');
+                    if (index !== -1 && index < 30) {
+                        showErrorDialog(data);
+                    } else if (data.match(/\.i\.tmp\:\d*?\:\d*?\:/)) {
+                        showErrorDialog(data);
+                    } else {
+                        callback(data);
+                    }
+                    tmpFile.unlink();
+                });
+            } else {
+                tmpFile.unlink();
+                endGoFmt();
+            }
+        });
     }
 
     /** The main function, called when clicking the button or pressing the shortcut */
@@ -67,37 +141,37 @@ define(function (require, exports, module) {
             return;
         }
 
-        if (!editor.document || typeof node.domains.gofmt === "undefined") {
+        if (!editor.document || typeof node.domains.gofmt === "undefined" || typeof node.domains.goimports === "undefined") {
             // Happens sometimes (when brackets has a critical problem)
             endGoFmt();
             return;
         }
 
         var cursorPos = editor.getCursorPos(),
-            fileBody = editor.document.getText();
+            fileBody = editor.document.getText(),
+            useAutoImport = Preferences.get('useGoImports');
 
-        var tmpFilePath = currentDocument.file._path + '.tmp';
-        var tmpFile = FileSystem.getFileForPath(tmpFilePath);
+        var tmpFilePathFormat = currentDocument.file._path + '.f.tmp';
+        var tmpFileFormat = FileSystem.getFileForPath(tmpFilePathFormat);
+        var tmpFilePathImport = currentDocument.file._path + '.i.tmp';
+        var tmpFileImport;
 
-        tmpFile.exists(function (err, exists) {
-            if (!exists) {
-                tmpFile.write(fileBody);
-                node.domains.gofmt.formatFile(tmpFilePath).done(function (data) {
-                    var index = data.indexOf('gofmt');
-                    if (index === 0 || index === 1) {
-                        showErrorDialog(data);
-                    } else if (data.match(/\.tmp\:\d*?\:\d*?\:/)) {
-                        showErrorDialog(formatGoErrors(data));
-                    } else {
-                        editor.selectAllNoScroll();
-                        editor.document.setText(data);
-                        editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
-                        endGoFmt();
-                    }
-                    tmpFile.unlink();
+        if (useAutoImport) {
+            tmpFileImport = FileSystem.getFileForPath(tmpFilePathImport);
+        }
+
+        formatFile(tmpFileFormat, tmpFilePathFormat, fileBody, function (formatted) {
+            if (useAutoImport) {
+                autoImport(tmpFileImport, tmpFilePathImport, formatted, function (imported) {
+                    editor.selectAllNoScroll();
+                    editor.document.setText(imported);
+                    editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
+                    endGoFmt();
                 });
             } else {
-                tmpFile.unlink();
+                editor.selectAllNoScroll();
+                editor.document.setText(formatted);
+                editor.setCursorPos(cursorPos.line, cursorPos.ch, true);
                 endGoFmt();
             }
         });
@@ -119,13 +193,14 @@ define(function (require, exports, module) {
         icon.attr("title", Strings.FORMAT_THIS_FILE);
         icon.on("click", handleIconClick);
         icon.appendTo($("#main-toolbar").find(".buttons"));
-        ExtensionUtils.loadStyleSheet(module, "styles/gofmt.css");
     }
 
-    if (!node.domains.gofmt) {
+    if (!node.domains.gofmt || !node.domains.goimports) {
         node.connect(true).done(function () {
-            var path = ExtensionUtils.getModulePath(module, 'node/gofmt.js');
-            node.loadDomains([path], true).done(function () {
+            var gofmtPath = ExtensionUtils.getModulePath(module, 'node/gofmt.js');
+            var goimportsPath = ExtensionUtils.getModulePath(module, 'node/goimports.js');
+
+            node.loadDomains([gofmtPath, goimportsPath], true).done(function () {
                 AppInit.appReady(initGoFmt);
             });
         });
@@ -133,12 +208,16 @@ define(function (require, exports, module) {
         AppInit.appReady(initGoFmt);
     }
 
+    // Register commands and add them to the menu.
     CommandManager.register(Strings.FORMAT_THIS_FILE, GFT_CMD_ID, handleIconClick);
+    CommandManager.register(Strings.SETTINGS_CMD, GFT_SETTINGS_CMD_ID, SettingsDialog.show);
 
-    var menu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
-    menu.addMenuItem(GFT_CMD_ID, [
-        {key: "Ctrl-Alt-F", platform: "win"},
-        {key: "Cmd-Alt-F", platform: "mac"}
+    var editMenu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
+    var fileMenu = Menus.getMenu(Menus.AppMenuBar.FILE_MENU);
+
+    fileMenu.addMenuItem(GFT_SETTINGS_CMD_ID, [], Menus.AFTER, Commands.FILE_PROJECT_SETTINGS);
+    editMenu.addMenuItem(GFT_CMD_ID, [
+        {key: Preferences.get('gofmtShortcut')}
     ]);
 
 });
