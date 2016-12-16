@@ -209,14 +209,15 @@ define(function (require, exports, module) {
     }
 
     // Register commands and add them to the menu.
+    CommandManager.register(Strings.FORMAT_THIS_FILE, GFT_CMD_ID, handleIconClick);
+    CommandManager.register(Strings.SETTINGS_CMD, GFT_SETTINGS_CMD_ID, SettingsDialog.show);
 
     var editMenu = Menus.getMenu(Menus.AppMenuBar.EDIT_MENU);
-    CommandManager.register(Strings.FORMAT_THIS_FILE, GFT_CMD_ID, handleIconClick);
+    var fileMenu = Menus.getMenu(Menus.AppMenuBar.FILE_MENU);
+
+    fileMenu.addMenuItem(GFT_SETTINGS_CMD_ID, [], Menus.AFTER, Commands.FILE_PROJECT_SETTINGS);
     editMenu.addMenuItem(GFT_CMD_ID, [
         {key: Preferences.get('gofmtShortcut')}
     ]);
 
-    var fileMenu = Menus.getMenu(Menus.AppMenuBar.FILE_MENU);
-    CommandManager.register(Strings.SETTINGS_CMD, GFT_SETTINGS_CMD_ID, SettingsDialog.show);
-    fileMenu.addMenuItem(GFT_SETTINGS_CMD_ID, [], Menus.AFTER, Commands.FILE_PROJECT_SETTINGS);
 });
