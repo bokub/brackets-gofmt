@@ -136,7 +136,8 @@ define(function (require, exports, module) {
             showErrorDialog(Strings.ERROR_NO_CURRENT_FILE);
             return;
         }
-        if (currentDocument.language._name !== 'Golang') {
+        if ((currentDocument.language._name !== 'Golang') &&
+            (currentDocument.language._name !== 'Go')) {
             showErrorDialog(Strings.ERROR_NOT_GO_FILE, {language: currentDocument.language._name});
             return;
         }
