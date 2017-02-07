@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/bokub/brackets-gofmt.svg?branch=master)](https://travis-ci.org/bokub/brackets-gofmt)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://raw.githubusercontent.com/bokub/brackets-gofmt/master/LICENSE)
+
 # Improved Go Formatter for Brackets IDE
 
 Gives you the ability to reformat the contents of a Go file using `gofmt` and `goimports`, just by pressing a shortcut of your choice.
