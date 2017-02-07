@@ -74,7 +74,8 @@ define(function (require, exports, module) {
     function formatGoErrors(message) {
         var colorTheme = ThemeManager.getCurrentTheme().dark ? "dark" : "light";
         return ('<span class="go-errors ' + colorTheme + '">') +
-            message.replace(/(\S+)\.f\.tmp\:(\d*?\:\d*?)\:/g, '<span class="file-name">$1</span><span class="line-number">&nbsp;$2&nbsp; </span>')
+            message.replace(/(\S+)\.f\.tmp\:(\d*?\:\d*?)\:/g,
+                            '<span class="file-name">$1</span><span class="line-number">&nbsp;$2&nbsp; </span>')
             .replace(/\n/g, '<br>') + '</span>';
     }
 
@@ -106,7 +107,10 @@ define(function (require, exports, module) {
         tmpFile.exists(function (err, exists) {
             if (!exists) {
                 tmpFile.write(fileBody);
-                node.domains.goimports.autoImports(tmpFilePath, Preferences.get('goimportsPath'), Preferences.get('goPath')).done(function (data) {
+
+                var goImports =  Preferences.get('goimportsPath');
+                var goPath = Preferences.get('goPath');
+                node.domains.goimports.autoImports(tmpFilePath, goImports, goPath).done(function (data) {
                     var index = data.indexOf('goimports');
                     if (index !== -1 && index < 30) {
                         showErrorDialog(data);
@@ -137,14 +141,19 @@ define(function (require, exports, module) {
             showErrorDialog(Strings.ERROR_NO_CURRENT_FILE);
             return;
         }
-        
+
         var extension = FileUtils.getFileExtension(currentDocument.file._path);
         if (extension !== "go") {
             showErrorDialog(Strings.ERROR_NOT_GO_FILE, {language: currentDocument.language._name});
             return;
         }
 
-        if (!editor.document || typeof node.domains.gofmt === "undefined" || typeof node.domains.goimports === "undefined") {
+        if (!editor.document) {
+            endGoFmt();
+            return;
+        }
+
+        if (typeof node.domains.gofmt === "undefined" || typeof node.domains.goimports === "undefined") {
             // Happens sometimes (when brackets has a critical problem)
             endGoFmt();
             return;
