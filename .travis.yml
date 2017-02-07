@@ -1,0 +1,12 @@
+language: node_js
+sudo: false 
+node_js:
+  - "6"
+  
+before_install:
+  - npm install grunt
+  - npm install grunt-contrib-jshint --save-dev
+  - npm install gruntify-eslint --save-dev 
+  
+script:
+  - node_modules/grunt/bin/grunt travis
