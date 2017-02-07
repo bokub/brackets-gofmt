@@ -1,6 +1,6 @@
 {
     "name": "bokub.go-formatter",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "title": "Improved Go Formatter",
     "description": "Format your Go files easily with a custom shortcut. This extension uses gofmt to format your code and goimports to manage your imports.",
     "engines": {

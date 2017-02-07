@@ -17,7 +17,8 @@ define(function (require, exports, module) {
         ThemeManager = brackets.getModule('view/ThemeManager'),
         Mustache = brackets.getModule("thirdparty/mustache/mustache"),
         Dialogs = brackets.getModule("widgets/Dialogs"),
-        Commands = brackets.getModule("command/Commands");
+        Commands = brackets.getModule("command/Commands"),
+        FileUtils = brackets.getModule("file/FileUtils");
 
     // Local modules
     var SettingsDialog  = require("src/SettingsDialog"),
@@ -136,8 +137,9 @@ define(function (require, exports, module) {
             showErrorDialog(Strings.ERROR_NO_CURRENT_FILE);
             return;
         }
-        if ((currentDocument.language._name !== 'Golang') &&
-            (currentDocument.language._name !== 'Go')) {
+        
+        var extension = FileUtils.getFileExtension(currentDocument.file._path);
+        if (extension !== "go") {
             showErrorDialog(Strings.ERROR_NOT_GO_FILE, {language: currentDocument.language._name});
             return;
         }
