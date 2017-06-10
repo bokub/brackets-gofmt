@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/bokub/brackets-gofmt.svg?branch=master)](https://travis-ci.org/bokub/brackets-gofmt)
-[![Downloads](https://badges.ml/bokub.go-formatter/last-version.svg)](https://brackets-extension-badges.github.io/)
+[![Downloads](https://badges.ml/bokub.go-formatter/last-version.svg)](https://brackets-extension-badges.github.io#bokub.go-formatter)
 [![license](https://img.shields.io/badge/license-MIT-orange.svg)](https://raw.githubusercontent.com/bokub/brackets-gofmt/master/LICENSE)
 
 # Improved Go Formatter for Brackets IDE
